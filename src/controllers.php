@@ -94,6 +94,8 @@ function edit(&$model)
 
 function add()
 {
+    $maks_size = 1024 * 1024;
+    $allowed_extensions = array('jpg', 'jpeg', 'png');
     $image = [
         'author' => null,
         'title' => null,
@@ -112,14 +114,25 @@ function add()
             if ($_FILES["file"]["error"] == UPLOAD_ERR_OK) {
                 $uploaddir = $_SERVER['DOCUMENT_ROOT'] . '/img/';
                 $uploadfile = $uploaddir . 'og/' . basename($_FILES['file']['name']);
+                if ($_FILES['file']['size'] <= $maks_size) {
+                    $file_name = $_FILES['file']['name'];
+                    $file_extension = pathinfo($file_name, PATHINFO_EXTENSION);
+                    if (in_array(strtolower($file_extension), $allowed_extensions)) {
+                        if (move_uploaded_file($_FILES['file']['tmp_name'], $uploadfile)) {
 
-                if (move_uploaded_file($_FILES['file']['tmp_name'], $uploadfile)) {
+                            $filepath = watermark($uploadfile, $uploaddir, $_POST['watermark']);
+                            thumbnail($uploadfile, $uploaddir, $filepath);
 
-                    $filepath = watermark($uploadfile, $uploaddir, $_POST['watermark']);
-                    thumbnail($uploadfile, $uploaddir, $filepath);
-
+                        } else {
+                            echo "Possible file upload attack! <a href='add' >Wróć</a>\n";
+                            exit();
+                        }
+                    } else {
+                        echo "Niedozwolone rozszerzenie! <a href='add' >Wróć</a>\n";
+                        exit();
+                    }
                 } else {
-                    echo "Possible file upload attack! <a href='add' >Wróć</a>\n";
+                    echo "Plik jest za duży! <a href='add' >Wróć</a>\n";
                     exit();
                 }
             } else {
@@ -212,6 +225,7 @@ function gallery(&$model)
     $model['display'] = display($page, $images);
 
     //delete_images();
+    //delete_image('');
     return 'gallery_view';
 }
 

@@ -11,7 +11,8 @@ function get_db()
         [
             'username' => 'wai_web',
             'password' => 'w@i_w3b',
-        ]);
+        ]
+    );
 
     $db = $mongo->wai;
 
@@ -111,6 +112,12 @@ function delete_images()
     $db->images->drop();
 }
 
+function delete_image($id)
+{
+    $db = get_db();
+    $db->images->deleteOne(['_id' => new ObjectID($id)]);
+}
+
 function watermark($uploadfile, $uploaddir, $znka_wodny)
 {
     if ($_FILES["file"]['type'] === 'image/png') {
@@ -155,48 +162,25 @@ function thumbnail($uploadfile, $uploaddir, $filepath)
 
 function display($page, $images)
 {
-    $directory_m = './img/miniaturki/';
-    //$directory_zw = './img/zw/';
     $img_on_page = 5;
     $start = ($page - 1) * $img_on_page;
     $end = $start + $img_on_page;
 
-    //$images = glob($directory_m . '*.png', GLOB_BRACE);
-    $display = '';
-    // for ($i = $start; $i < $end && $i < count($images); $i++) {
-    //     $file = basename($images[$i]);
-    //     $display = $display . '<div class="gallery-item"><a href="' . $directory_zw . $file . '" target="_blank"><img src="' . $images[$i] . '" alt="' . $file . '" class="gallery-img"></a></div>';
-    // }
-    // $display = $display . '</div><div class ="prev-next">';
-    // if ($start > 0) {
-    //     $prev_page = $page - 1;
-    //     $display = $display . '<a href="?page=' . $prev_page . '">Poprzednia</a>';
-    // }
-    // if ($end < count($images)) {
-    //     $next_page = $page + 1;
-    //     $display = $display . '<a href="?page=' . $next_page . '">Następna</a>';
-    // }
-    // $display = $display . '</div>';
-
+    $display = [];
+    $a = 1;
     if (count($images)) {
         for ($i = $start; $i < $end && $i < count($images); $i++) {
-            $file = $images[$i];
-            $file_name = pathinfo($file['file_name'], PATHINFO_FILENAME) . '.png';
-            $display = $display . '<div class="gallery-item"><a href="image?id=' . $file['_id'] . '"><img src="' . $directory_m . $file_name . '" alt="' . $file_name . '" class="gallery-img"></a><div class="gallery-text"><h3>' . $file['title'] . '</h3>' . $file['author'] . '</div></div>';
+            $display['images'][$a] = $images[$i];
+            $a++;
         }
-        $display = $display . '</div><div class ="prev-next">';
         if ($start > 0) {
             $prev_page = $page - 1;
-            $display = $display . '<a href="?page=' . $prev_page . '">Poprzednia</a>';
+            $display['prev'] = $prev_page;
         }
         if ($end < count($images)) {
             $next_page = $page + 1;
-            $display = $display . '<a href="?page=' . $next_page . '">Następna</a>';
+            $display['next'] = $next_page;
         }
-        $display = $display . '</div>';
-    } else {
-
-        $display = '<h3>Nie ma niczego</h3>';
     }
 
 
